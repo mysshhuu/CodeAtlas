@@ -12,11 +12,6 @@ app = FastAPI(
 )
 
 
-# ---------------------------------------------------------
-# CORS
-# Allow the React/Vite frontend to communicate with FastAPI
-# ---------------------------------------------------------
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -26,16 +21,13 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
         "http://127.0.0.1:5175",
+        "https://code-atlas-phi-mauve.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# ---------------------------------------------------------
-# Health check
-# ---------------------------------------------------------
 
 @app.get("/health")
 def health_check():
@@ -44,10 +36,6 @@ def health_check():
         "service": "CodeAtlas",
     }
 
-
-# ---------------------------------------------------------
-# API routes
-# ---------------------------------------------------------
 
 app.include_router(ask_router)
 app.include_router(repository_router)
