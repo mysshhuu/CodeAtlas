@@ -1,18 +1,37 @@
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+import os
 
+from dotenv import load_dotenv
+from qdrant_client import QdrantClient
+from qdrant_client.models import (
+    Distance,
+    VectorParams,
+    PointStruct,
+)
+
+load_dotenv()
 
 COLLECTION_NAME = "codeatlas_code"
 
-# Create a local Qdrant database
-client = QdrantClient(path="data/qdrant")
+QDRANT_URL = os.getenv("QDRANT_URL")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+
+
+# Use Qdrant Cloud when credentials are available.
+# Otherwise, fall back to local Qdrant storage.
+if QDRANT_URL and QDRANT_API_KEY:
+    client = QdrantClient(
+        url=QDRANT_URL,
+        api_key=QDRANT_API_KEY,
+    )
+    print("Connected to Qdrant Cloud")
+else:
+    client = QdrantClient(
+        path="data/qdrant"
+    )
+    print("Using local Qdrant database")
 
 
 def create_collection():
-    """
-    Create the CodeAtlas vector collection if it doesn't exist.
-    """
-
     collections = client.get_collections().collections
 
     existing_collections = [
@@ -40,15 +59,6 @@ def create_collection():
 
 
 def reset_collection():
-    """
-    Delete the existing CodeAtlas collection and
-    create a fresh empty collection.
-
-    We use this when indexing a new repository so
-    old/incomplete vectors don't mix with the new
-    repository.
-    """
-
     collections = client.get_collections().collections
 
     existing_collections = [
@@ -84,10 +94,6 @@ def store_code_chunk(
     code: str,
     metadata: dict,
 ):
-    """
-    Store one code chunk inside Qdrant.
-    """
-
     point = PointStruct(
         id=point_id,
         vector=embedding,
@@ -111,10 +117,6 @@ def search_code(
     query_embedding: list[float],
     limit: int = 5,
 ):
-    """
-    Search Qdrant for the most relevant code chunks.
-    """
-
     results = client.query_points(
         collection_name=COLLECTION_NAME,
         query=query_embedding,
